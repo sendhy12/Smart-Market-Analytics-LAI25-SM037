@@ -102,20 +102,36 @@ File CSV harus memiliki kolom-kolom berikut:
 
 | Kolom | Tipe Data | Deskripsi |
 |-------|-----------|-----------|
-| `nama_pasar` | String | Nama pasar tradisional |
-| `item_barang` | String | Nama/jenis barang |
-| `jumlah` | Integer | Jumlah stok barang (dalam kg) |
-| `kebutuhan` | Integer | Kebutuhan barang (dalam kg) |
+| `id` | Integer | ID unik untuk setiap record |
+| `satuan` | String | Satuan pengukuran (kosong/optional) |
+| `pasar` | Integer | Kode numerik pasar |
 | `tanggal` | Date | Tanggal pencatatan (YYYY-MM-DD) |
-| `satuan_item` | String | Satuan barang (harus 'kg') |
+| `nama_item` | Integer | Kode item barang |
+| `keterangan` | String | Status ketersediaan (cukup/kurang/berlebih) |
+| `harga` | Integer | Harga barang per satuan |
+| `jumlah` | Integer | Jumlah stok barang tersedia |
+| `kebutuhan` | Integer | Kebutuhan barang yang dibutuhkan |
+| `item_barang` | String | Nama lengkap barang |
+| `satuan_item` | String | Satuan item (kg/liter/dll) |
+| `nama_pasar` | String | Nama lengkap pasar tradisional |
 
 ### Contoh Data
 ```csv
-nama_pasar,item_barang,jumlah,kebutuhan,tanggal,satuan_item
-Pasar Sumedang,Beras,1000,1200,2024-01-15,kg
-Pasar Tanjungsari,Gula,500,450,2024-01-15,kg
-Pasar Situraja,Minyak Goreng,300,350,2024-01-15,kg
+id,satuan,pasar,tanggal,nama_item,keterangan,harga,jumlah,kebutuhan,item_barang,satuan_item,nama_pasar
+26766,,7,2022-01-01,1,cukup,12000,150,200,Beras Premium,kg,Pasar Parakanmuncang
+26767,,7,2022-01-01,2,cukup,11500,100,120,Beras Medium,kg,Pasar Parakanmuncang
+26768,,7,2022-01-01,3,kurang,12000,50,100,Beras Termahal,kg,Pasar Parakanmuncang
+26769,,7,2022-01-01,4,cukup,14000,80,75,Gula Pasir,kg,Pasar Parakanmuncang
+26770,,7,2022-01-01,8,berlebih,15000,200,150,Minyak Goreng Bimoli,liter,Pasar Parakanmuncang
 ```
+
+### ⚠️ Catatan Penting tentang Data
+- **ID**: Setiap record harus memiliki ID unik
+- **Tanggal**: Format YYYY-MM-DD wajib diikuti
+- **Harga**: Dalam format integer (tanpa desimal)
+- **Jumlah & Kebutuhan**: Nilai 0 menunjukkan tidak ada data/tidak tersedia
+- **Keterangan**: Indikator status stok (cukup/kurang/berlebih)
+- **Satuan**: Kolom ini bisa kosong, satuan sebenarnya ada di `satuan_item`
 
 ## 🎨 Panduan Penggunaan
 
@@ -131,40 +147,51 @@ Jika ingin menjalankan secara lokal, ikuti [panduan instalasi](#🔧-instalasi) 
 - Klik tombol "📁 Unggah file CSV Anda"
 - Pilih file CSV dengan format yang sesuai
 - Sistem akan otomatis memvalidasi dan membersihkan data
+- **Handling Missing Data**: Aplikasi akan otomatis menangani nilai 0 atau data kosong
 
 ### 2. Exploratory Data Analysis
 - Gunakan sidebar untuk memfilter data berdasarkan:
-  - Pasar yang ingin dianalisis
-  - Jenis barang
-  - Periode tahun
-  - Periode bulan
+  - Pasar yang ingin dianalisis (`nama_pasar`)
+  - Jenis barang (`item_barang`)
+  - Periode tahun (dari kolom `tanggal`)
+  - Periode bulan (dari kolom `tanggal`)
+  - Status keterangan (`cukup`, `kurang`, `berlebih`)
 - Lihat visualisasi dan insight yang dihasilkan secara otomatis
 
 ### 3. K-Means Clustering
 - Pilih menu "🎯 K-Means Clustering"
 - Atur parameter clustering menggunakan slider
-- Analisis hasil clustering dan interpretasi bisnis
+- Analisis hasil clustering berdasarkan:
+  - **Jumlah stok** vs **Kebutuhan**
+  - **Harga** vs **Status ketersediaan**
 - Download laporan PDF jika diperlukan
 
 ### 4. Filter Data
 Aplikasi menyediakan filter komprehensif:
 - **Multi-select filter** untuk pasar, barang, tahun, dan bulan
+- **Status filter** berdasarkan keterangan stok
 - **Default selection** yang cerdas untuk performa optimal
 - **Real-time filtering** yang langsung memperbarui visualisasi
 
 ## 📈 Interpretasi Hasil
 
 ### EDA Insights
-- **Status Stok**: Indikator apakah terjadi overstock atau kekurangan
-- **Korelasi**: Mengukur seberapa baik stok mengikuti pola kebutuhan
-- **Top Items**: Identifikasi barang dengan kebutuhan tertinggi
-- **Market Performance**: Perbandingan performa antar pasar
+- **Status Stok**: Berdasarkan kolom `keterangan` dan perbandingan `jumlah` vs `kebutuhan`
+- **Analisis Harga**: Korelasi antara harga dengan ketersediaan stok
+- **Top Items**: Identifikasi barang dengan kebutuhan tertinggi dari kolom `kebutuhan`
+- **Market Performance**: Perbandingan performa antar `nama_pasar`
+- **Trend Analysis**: Pola musiman berdasarkan `tanggal`
 
 ### Clustering Insights
-- **Cluster Tinggi**: Barang/pasar dengan kebutuhan tinggi
-- **Cluster Rendah**: Barang/pasar dengan kebutuhan rendah  
-- **Pattern Recognition**: Identifikasi pola tersembunyi dalam data
-- **Strategic Grouping**: Pengelompokan untuk strategi bisnis
+- **Cluster Harga Tinggi**: Barang premium dengan harga di atas rata-rata
+- **Cluster Kebutuhan Tinggi**: Barang dengan permintaan tinggi
+- **Cluster Stok Berlebih**: Identifikasi overstock untuk optimasi
+- **Pattern Recognition**: Identifikasi pola tersembunyi dalam hubungan harga-stok-kebutuhan
+
+### Status Keterangan
+- **"cukup"**: Stok memadai sesuai kebutuhan
+- **"kurang"**: Stok di bawah kebutuhan (perlu restocking)
+- **"berlebih"**: Stok melebihi kebutuhan (risk of waste)
 
 ## 🏛️ Konfigurasi Pemerintahan
 
@@ -186,23 +213,27 @@ self.cell(0, 5, "DINAS [NAMA_DINAS]", ln=True, align='L')
 - **Pemrosesan Lokal**: Semua data diproses secara lokal di server
 - **No Data Storage**: Aplikasi tidak menyimpan data secara permanen
 - **Session-based**: Data hanya tersedia selama sesi aktif
+- **Privacy First**: ID dan informasi sensitif tidak disimpan atau dibagikan
 
 ## 🚨 Troubleshooting
 
 ### Error Loading Data
-- Pastikan file CSV memiliki kolom yang diperlukan
+- Pastikan file CSV memiliki semua kolom yang diperlukan (12 kolom)
 - Periksa format tanggal (YYYY-MM-DD)
-- Pastikan kolom numerik tidak mengandung karakter non-angka
+- Pastikan kolom `id`, `pasar`, `nama_item`, `harga`, `jumlah`, `kebutuhan` berisi angka
+- Kolom `satuan` boleh kosong, tapi kolom lain harus terisi
 
-### Performance Issues
-- Batasi jumlah data untuk dataset besar (> 100k records)
-- Gunakan filter untuk mengurangi data yang diproses
-- Tutup tab browser yang tidak diperlukan
+### Performance Issues dengan Data Besar
+- **Zero Values**: Data dengan nilai 0 di `jumlah` dan `kebutuhan` akan difilter otomatis
+- **Date Range**: Gunakan filter tanggal untuk membatasi data yang dianalisis
+- **Market Selection**: Pilih pasar spesifik untuk analisis mendalam
+- **Memory Optimization**: Tutup tab browser yang tidak diperlukan
 
 ### PDF Generation Failed
 - Pastikan memori sistem mencukupi
 - Reduce jumlah cluster jika data terlalu besar
-- Periksa koneksi internet untuk dependencies
+- Periksa apakah data telah difilter dengan benar
+- Pastikan tidak ada karakter khusus dalam nama pasar/barang
 
 ## 🤝 Kontribusi
 
@@ -212,10 +243,6 @@ Untuk berkontribusi pada proyek ini:
 3. Commit perubahan (`git commit -m 'Add some AmazingFeature'`)
 4. Push ke branch (`git push origin feature/AmazingFeature`)
 5. Buat Pull Request
-
-## 📝 Lisensi
-
-Proyek ini dilisensikan di bawah MIT License - lihat file [LICENSE](LICENSE) untuk detail.
 
 ## 📞 Dukungan
 
@@ -231,18 +258,20 @@ Untuk dukungan teknis atau pertanyaan:
 ## 🔄 Changelog
 
 ### Version 1.0.0 (Current)
-- ✅ Implementasi EDA lengkap
-- ✅ K-Means clustering dengan visualisasi
-- ✅ PDF report generation
-- ✅ Professional government formatting
-- ✅ Comprehensive filtering system
+- ✅ Implementasi EDA lengkap dengan 12 kolom data
+- ✅ K-Means clustering dengan visualisasi harga-stok-kebutuhan
+- ✅ PDF report generation dengan format pemerintahan
+- ✅ Handling untuk data dengan nilai 0 (missing data)
+- ✅ Comprehensive filtering system termasuk status keterangan
+- ✅ Price analysis dan correlation insights
 
 ### Planned Features
-- 🔄 Time series analysis
-- 🔄 Predictive modeling
-- 🔄 Dashboard real-time
-- 🔄 API integration
-- 🔄 Multi-user support
+- 🔄 Time series analysis untuk trend bulanan/tahunan
+- 🔄 Predictive modeling untuk forecasting kebutuhan
+- 🔄 Dashboard real-time dengan auto-refresh
+- 🔄 API integration untuk data real-time
+- 🔄 Multi-user support dengan role management
+- 🔄 Advanced price analytics dan market comparison
 
 ---
 
